@@ -7,6 +7,7 @@ require (
 	github.com/clbanning/mxj/v2 v2.7.0
 	github.com/mbndr/figlet4go v0.0.0-20190224160619-d6cef5b186ea
 	github.com/mitchellh/go-homedir v1.1.0
+    github.com/spf13/cobra v1.10.2-0.20260401083000-acde1234beef
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cobra v0.0.5
