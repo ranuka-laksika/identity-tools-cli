@@ -71,6 +71,14 @@ jobs:
             "engineering-governance/dependency-registry/go.yaml" \
             "${{ env.DEPENDENCY_SCOPE }}"
 
+          echo "=== Validation completed with exit code: $? ==="
+          echo "=== Checking output files ==="
+          ls -la /tmp/*deps*.txt 2>/dev/null || echo "No dependency status files found"
+          if [ -f /tmp/all_deps_status.txt ]; then
+            echo "=== Contents of all_deps_status.txt ==="
+            cat /tmp/all_deps_status.txt
+          fi
+
 
       - name: Comment on PR - Validation Failed
         if: steps.validate.outcome == 'failure'
@@ -82,6 +90,7 @@ jobs:
             let comment = '## Dependency Validation Results\n\n';
 
             let hasUnapproved = false;
+            let hasAnyDependencies = false;
 
             // Read all dependencies status
             if (fs.existsSync('/tmp/all_deps_status.txt')) {
@@ -90,6 +99,8 @@ jobs:
                 const lines = allDepsStatus.split('\n');
                 for (const line of lines) {
                   if (line.trim()) {
+                    hasAnyDependencies = true;
+                    const [status, module, version, reason] = line.split('|');
                     const parts = line.split('|');
                     const status = parts[0];
                     const module = parts[1];
@@ -120,7 +131,13 @@ jobs:
                     }
                   }
                 }
+              } else {
+                comment += '⚠️ **Warning:** No dependency status information found. The validation script may have encountered an error.\n\n';
+                comment += 'Please check the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.\n\n';
               }
+            } else {
+              comment += '⚠️ **Warning:** Dependency status file not found. The validation script may have encountered an error.\n\n';
+              comment += 'Please check the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.\n\n';
             }
 
             if (hasUnapproved) {
@@ -151,6 +168,7 @@ jobs:
             const fs = require('fs');
 
             let comment = '## Dependency Validation Results\n\n';
+            let hasAnyDependencies = false;
 
             // Read all dependencies status
             if (fs.existsSync('/tmp/all_deps_status.txt')) {
@@ -159,6 +177,8 @@ jobs:
                 const lines = allDepsStatus.split('\n');
                 for (const line of lines) {
                   if (line.trim()) {
+                    hasAnyDependencies = true;
+                    const [status, module, version, reason] = line.split('|');
                     const parts = line.split('|');
                     const status = parts[0];
                     const module = parts[1];
@@ -184,7 +204,18 @@ jobs:
                     }
                   }
                 }
+
+                if (!hasAnyDependencies) {
+                  comment += '✅ **All dependencies validated successfully!**\n\n';
+                  comment += '> No new or updated dependencies detected, or all dependencies are approved.\n\n';
+                }
+              } else {
+                comment += '✅ **Validation passed, but no dependency details available.**\n\n';
+                comment += 'This may occur if no direct dependencies were added or updated.\n\n';
               }
+            } else {
+              comment += '✅ **Validation passed, but dependency status file not found.**\n\n';
+              comment += 'This may occur if no direct dependencies were added or updated.\n\n';
             }
 
             comment += '⚠️ Please verify the scope of the dependencies usage is necessary\n';
