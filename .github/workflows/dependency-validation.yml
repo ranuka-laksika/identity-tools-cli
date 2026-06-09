@@ -57,6 +57,7 @@ jobs:
           repository: wso2/engineering-governance
           path: engineering-governance
           ref: main
+          persist-credentials: false
 
       - name: Extract and validate dependencies
         if: steps.detect-changes.outputs.has_changes == 'true'
@@ -89,7 +90,11 @@ jobs:
                 const lines = allDepsStatus.split('\n');
                 for (const line of lines) {
                   if (line.trim()) {
-                    const [status, module, version, reason] = line.split('|');
+                    const parts = line.split('|');
+                    const status = parts[0];
+                    const module = parts[1];
+                    const version = parts[2];
+                    const reason = parts.slice(3).join('|');
 
                     if (status === 'UNAPPROVED') {
                       hasUnapproved = true;
@@ -154,7 +159,11 @@ jobs:
                 const lines = allDepsStatus.split('\n');
                 for (const line of lines) {
                   if (line.trim()) {
-                    const [status, module, version, reason] = line.split('|');
+                    const parts = line.split('|');
+                    const status = parts[0];
+                    const module = parts[1];
+                    const version = parts[2];
+                    const reason = parts.slice(3).join('|');
 
                     if (status === 'APPROVED') {
                       // Extract allowed range from reason if present
