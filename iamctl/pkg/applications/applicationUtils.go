@@ -475,6 +475,10 @@ func filterAssociatedApplicationRoles(appMap map[string]interface{}) error {
 	}
 	rolesRaw, exists := assocRoles["roles"]
 	if !exists {
+		// Older server versions (e.g. IS 7.0.0) throw a NullPointerException when
+		// associatedRoles is patched without a roles list, so send an empty list
+		// instead of omitting the key.
+		assocRoles["roles"] = []interface{}{}
 		return nil
 	}
 	rolesList, ok := rolesRaw.([]interface{})
@@ -513,8 +517,28 @@ func removeAssociatedApplicationRoles(appMap map[string]interface{}) error {
 	if !ok {
 		return fmt.Errorf("unexpected format for associatedRoles")
 	}
-	delete(assocRoles, "roles")
+	// Older server versions (e.g. IS 7.0.0) fail with an internal server error
+	// when associatedRoles is sent without a roles list, so send an empty list
+	// instead of removing the key.
+	assocRoles["roles"] = []interface{}{}
 	return nil
+}
+
+func removeEmptyOutboundProvisioningIdps(appMap map[string]interface{}) {
+
+	provConf, ok := appMap["provisioningConfigurations"].(map[string]interface{})
+	if !ok {
+		return
+	}
+	// Older server versions (e.g. IS 7.0.0) reject the request with
+	// "Application-based outbound provisioning support is disabled" even when
+	// the outboundProvisioningIdps list is empty, so drop the field when empty.
+	if idps, ok := provConf["outboundProvisioningIdps"].([]interface{}); ok && len(idps) == 0 {
+		delete(provConf, "outboundProvisioningIdps")
+		if len(provConf) == 0 {
+			delete(appMap, "provisioningConfigurations")
+		}
+	}
 }
 
 func removeAdditionalSpProperties(appMap map[string]interface{}) error {
