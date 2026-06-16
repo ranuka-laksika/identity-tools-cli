@@ -53,11 +53,15 @@ func ImportAll(inputDirPath string) {
 		utils.MarkResTypeFailure(utils.ORGANIZATIONS)
 		return
 	}
-	curOrgId, err = GetCurrentOrganizationId()
-	if err != nil {
-		utils.PrintLog(utils.LogLevelError, utils.ORGANIZATIONS, "", "Error while retrieving current organization ID")
-		utils.MarkResTypeFailure(utils.ORGANIZATIONS)
-		return
+
+	hasWork := len(files) > 0 || (utils.TOOL_CONFIGS.AllowDelete && len(existingList) > 0)
+	if hasWork {
+		curOrgId, err = GetCurrentOrganizationId()
+		if err != nil {
+			utils.PrintLog(utils.LogLevelError, utils.ORGANIZATIONS, "", "Error while retrieving current organization ID")
+			utils.MarkResTypeFailure(utils.ORGANIZATIONS)
+			return
+		}
 	}
 
 	if utils.TOOL_CONFIGS.AllowDelete {

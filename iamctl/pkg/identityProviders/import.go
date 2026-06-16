@@ -75,8 +75,12 @@ func ImportAll(inputDirPath string) {
 
 			err := importIdp(idpId, idpName, idpFilePath, exportAPIExists)
 			if err != nil {
-				utils.PrintLog(utils.LogLevelError, utils.IDENTITY_PROVIDERS, idpName, fmt.Sprintf("Error importing identity provider: %s", err))
-				utils.UpdateFailureSummary(utils.IDENTITY_PROVIDERS, idpName)
+				if idpName == utils.RESIDENT_IDP_NAME {
+					utils.PrintLog(utils.LogLevelWarn, utils.IDENTITY_PROVIDERS, idpName, fmt.Sprintf("Skipping resident IDP update: %s", err))
+				} else {
+					utils.PrintLog(utils.LogLevelError, utils.IDENTITY_PROVIDERS, idpName, fmt.Sprintf("Error importing identity provider: %s", err))
+					utils.UpdateFailureSummary(utils.IDENTITY_PROVIDERS, idpName)
+				}
 			}
 		}
 	}
