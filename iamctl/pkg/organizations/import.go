@@ -54,8 +54,7 @@ func ImportAll(inputDirPath string) {
 		return
 	}
 
-	hasWork := len(files) > 0 || (utils.TOOL_CONFIGS.AllowDelete && len(existingList) > 0)
-	if hasWork {
+	if len(files) > 0 {
 		curOrgId, err = GetCurrentOrganizationId()
 		if err != nil {
 			utils.PrintLog(utils.LogLevelError, utils.ORGANIZATIONS, "", "Error while retrieving current organization ID")
